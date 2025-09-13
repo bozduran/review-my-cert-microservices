@@ -1,0 +1,119 @@
+
+server.ssl.bundle: gateway
+spring:
+  application:
+    name: gateway
+  ssl.bundle.jks.gateway:
+    key:
+      alias: bozntouran
+    keystore:
+      type: PKCS12
+      location: classpath:keystore/bozntouran-keystore.p12
+      password: secret
+  #keytool -genkeypair -alias bozntouran -keystore bozntouran-keystore.p12 -keypass secret -storeType PKCS12 -storepass secret -keyalg RSA -keysize 2048 -validity 365 -dname "C=GR, ST = Eastern Macedonia and Thrace, L=Xanthi, O=bozntouran, OU=Training , CN=localhost" -ext "SAN=dns:localhost"
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          trusted-proxies: ".*" #For development
+          #purposes, it can be set to allow any IP address. Note that this must be narrowed down
+          #to the actual IP addresses used by proxies, in a production environment!
+          routes:
+            - id: certificate
+              uri: lb://certificate
+              predicates:
+                - Path=/certificate/**
+
+            - id: company
+              uri: lb://company
+              predicates:
+                - Path=/company/**
+
+            - id: review
+              uri: lb://review
+              predicates:
+                - Path=/review/**
+            ##actuator
+            - id: review-actuator
+              uri: lb://review
+              predicates:
+                - Path=/review/actuator/**
+              filters:
+                - RewritePath=/review/(?<segment>.*), /$\{segment}
+
+
+            ##eureka
+            - id: eureka-api
+              uri: http://${app.eureka-server}:8761
+              predicates:
+                - Path=/eureka/api/{segment}
+              filters:
+                - SetPath=/eureka/{segment}
+
+            - id: eureka-web-start
+              uri: http://${app.eureka-server}:8761
+              predicates:
+                - Path=/eureka/web
+              filters:
+                - SetPath=/
+
+            - id: eureka-web-other
+              uri: http://${app.eureka-server}:8761
+              predicates:
+                - Path=/eureka/**
+            ## authorization-server
+            - id: oauth2-server
+              uri: lb://authorization-server
+              predicates:
+                - Path=/oauth2/**
+
+            - id: oauth2-login
+              uri: lb://authorization-server
+              predicates:
+                - Path=/login/**
+
+            - id: oauth2-error
+              uri: lb://authorization-server
+              predicates:
+                - Path=/error/**
+            - id: oauth2-static-resources
+              uri: lb://authorization-server
+              predicates:
+                - Path=/css/**, /js/**, /images/**
+            ##config ONLY FOR DEV
+            - id: config-server
+              uri: ${spring.cloud.config.uri}
+              predicates:
+                - Path=/config/**
+              filters:
+                - RewritePath=/config/(?<segment>.*), /$\{segment}
+
+server:
+  port: 8443
+
+logging:
+  level:
+    org.springframework.http.server.reactive: DEBUG
+    org.springframework.web.reactive: DEBUG
+    reactor.netty.http.client: DEBUG
+    org.springframework.cloud.gateway: trace
+    root: INFO
+    org:
+      zalando:
+        logbook: TRACE
+      springframework:
+        web: INFO
+    com:
+      myapp:
+        service: INFO
+  file:
+    name: gateway.log
+
+management.zipkin.tracing.endpoint: "http://zipkin:9411/api/v2/spans"
+management.tracing.sampling.probability: 1.0
+
+spring.cloud.gateway.server.webflux.trusted-proxies: ".*"
+
+spring.security.oauth2.resourceserver.jwt.issuer-uri: "http://${app.auth-server}:9999"
+
+

@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: authorization-server
+server:
+  port: 9999
+
+logging:
+  org:
+    zalando:
+      logbook: TRACE
+  file:
+    authorization-server.log
+
+server.forward-headers-strategy: framework
+
+

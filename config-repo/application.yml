@@ -1,0 +1,28 @@
+app:
+  eureka-username: eureka_user
+  eureka-password: eureka_password
+  eureka-server: localhost
+  auth-server: localhost
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: "http://${app.eureka-username}:${app.eureka-password}@${app.eureka-server}:8761/eureka/"
+    initialInstanceInfoReplicationIntervalSeconds: 5
+    registryFetchIntervalSeconds: 5
+  instance:
+    leaseRenewalIntervalInSeconds: 5
+    leaseExpirationDurationInSeconds: 5
+#The eureka.client.serviceUrl.defaultZone parameter is used to find the Eureka server, using
+#the localhost hostname when running without Docker and the eureka hostname when running
+#as containers in Docker.
+
+
+management.endpoint.health.show-details: "ALWAYS"
+management.endpoints.web.exposure.include: "*"
+---
+spring.config.activate.on-profile: docker
+
+app:
+  eureka-server: eureka
+  auth-server: authorization-server

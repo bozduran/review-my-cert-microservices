@@ -1,0 +1,137 @@
+spring:
+  application:
+    name: certificate
+  datasource:
+    username: myappadmin
+    password: myappadmin
+    url: jdbc:postgresql://localhost:5432/myappdb
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+server:
+  port: 2400
+
+logging:
+  level:
+    com.netflix.discovery: ERROR
+    org.springframework.cloud.netflix.eureka: ERROR
+    root: INFO
+    org:
+      springframework:
+        web: INFO
+    com:
+      myapp:
+        service: INFO
+  file:
+    name: certificate-service.log
+
+app:
+  eureka-username: userforeureka
+  eureka-password: passwordforeureka
+  eureka-server: localhost
+  auth-server: localhost
+
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: "http://${app.eureka-username}:${app.eureka-password}@${app.eureka-server}:8761/eureka/"
+    initialInstanceInfoReplicationIntervalSeconds: 5
+    registryFetchIntervalSeconds: 5
+  instance:
+    leaseRenewalIntervalInSeconds: 5
+    leaseExpirationDurationInSeconds: 5
+#The eureka.client.serviceUrl.defaultZone parameter is used to find the Eureka server, using
+#the localhost hostname when running without Docker and the eureka hostname when running
+#as containers in Docker.
+
+server.forward-headers-strategy: framework
+
+
+springdoc:
+  swagger-ui.path: /certificate/openapi/swagger-ui.html
+  api-docs.path: /certificate/openapi/v3/api-docs
+  packagesToScan: com.bozntouran.certificateservice
+  pathsToMatch: /**
+  cache.disabled: true
+
+  swagger-ui:
+    oauth2-redirect-url: /swagger-ui/oauth2-redirect.html
+    oauth:
+      clientId: writer
+      clientSecret: secret-writer
+      useBasicAuthenticationWithAccessCodeGrant: true
+  oAuthFlow:
+    authorizationUrl: https://localhost:8443/oauth2/authorize
+    tokenUrl: https://localhost:8443/oauth2/token
+
+api:
+  common:
+    version: 1.0.0
+    title: Certificates service
+    description: This API is for reviewing certifications.
+    termsOfService: MY TERMS OF SERVICE
+    license: MY LICENSE
+    licenseUrl: MY LICENSE URL
+    externalDocDesc: MY WIKI PAGE
+    externalDocUrl: MY WIKI URL
+    contact:
+      name: Ntouran
+      url: URL
+      email: ntouran@cert.com
+
+  responseCodes:
+    ok:
+      description: OK
+    badRequest:
+      description: Bad Request, invalid format of the request. See response message for more information
+    notFound:
+      description: Not found, the specified id does not exist
+    unprocessableEntity:
+      description: Unprocessable entity, input parameters caused the processing to fail. See response message for more information
+
+  certificate:
+
+    get-certificate-byId:
+      description: Return a single certificate by id this exists
+      notes: |
+        # Normal response
+        If the requested certificate id is found a certificate will be returned:
+        1. Base certificate information
+
+    get-certificate-byParameters:
+      description: Returns a page of a specific size based on the parameters given.
+      notes: |
+        If no paramaeters are give all available cerificates will be returned.
+
+    create-certificate:
+      description: Create a new certificate (Admin only)
+      notes: |
+        Only users with the **Administrator** role can access this endpoint.
+
+    delete-certificate:
+      description: Delete a certificate by id (Admin only)
+      notes: |
+        Only users with the **Administrator** role can delete certificates.
+
+    update-certificate:
+      description: Update an existing certificate (Admin only)
+      notes: |
+        Only users with the **Administrator** role can update certificates.
+
+spring.security.oauth2.resourceserver.jwt.issuer-uri: http://${app.auth-server}:9999
+
+---
+spring.config.activate.on-profile: docker
+
+server.port: 8080
+
+app:
+  eureka-server: eureka
+  auth-server: authorization-server
+spring:
+  datasource:
+    username: revMyCertAdmin
+    password: revMyCertAdmin
+    url: jdbc:postgresql://postgres:5432/review_my_cert_db

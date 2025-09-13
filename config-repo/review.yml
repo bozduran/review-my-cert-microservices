@@ -1,0 +1,161 @@
+spring:
+  application:
+    name: review
+  datasource:
+    username: myappadmin
+    password: myappadmin
+    url: jdbc:postgresql://localhost:5432/myappdb
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+server:
+  port: 2402
+
+logging:
+  level:
+    com.netflix.discovery: INFO
+    org.springframework.cloud.netflix.eureka: INFO
+    root: INFO
+    org:
+      zalando:
+        logbook: TRACE
+      springframework:
+        web: INFO
+    com:
+      myapp:
+        service: INFO
+  file:
+    name: review-service.log
+
+management.zipkin.tracing.endpoint: "http://zipkin:9411/api/v2/spans"
+management.tracing.sampling.probability: 1.0
+
+server.forward-headers-strategy: framework
+
+springdoc:
+  swagger-ui.path: /review/openapi/swagger-ui.html
+  api-docs.path: /review/openapi/v3/api-docs
+  packagesToScan: com.bozntouran.reviewservice
+  pathsToMatch: /**
+  cache.disabled: true
+
+  swagger-ui:
+    oauth2-redirect-url: /swagger-ui/oauth2-redirect.html
+    oauth:
+      clientId: writer
+      clientSecret: secret-writer
+      useBasicAuthenticationWithAccessCodeGrant: true
+  oAuthFlow:
+    authorizationUrl: "https://localhost:8443/oauth2/authorize"
+    tokenUrl: "https://localhost:8443/oauth2/token"
+
+api:
+  common:
+    version: 1.0.0
+    title: Review service
+    description: This API is for reviewing certifications.
+    termsOfService: MY TERMS OF SERVICE
+    license: MY LICENSE
+    licenseUrl: MY LICENSE URL
+    externalDocDesc: MY WIKI PAGE
+    externalDocUrl: MY WIKI URL
+    contact:
+      name: Ntouran
+      url: URL
+      email: ntouran@cert.com
+
+  responseCodes:
+    ok:
+      description: OK
+    badRequest:
+      description: Bad Request, invalid format of the request. See response message for more information
+    notFound:
+      description: Not found, the specified id does not exist
+    unprocessableEntity:
+      description: Unprocessable entity, input parameters caused the processing to fail. See response message for more information
+    created:
+      description: Successfully created review
+    noContent:
+      description: Successfully deleted or updated, no content returned
+
+  review:
+    get-review-byId:
+      description: Retrieve a single review by its ID.
+      notes: |
+        # Normal response
+        - If the review exists, its details will be returned.  
+        - If the review is not found, a **404 Not Found** error will be returned.
+
+    get-reviews:
+      description: Retrieve all reviews, optionally filtered by parameters.
+      notes: |
+        # Normal response
+        - If no filters are provided, all reviews will be returned.  
+        - Reviews can be filtered by `certificateId`, `reviewId`, or `username`.  
+        - Results are paginated using the `pageNumber` parameter.
+
+    create-review:
+      description: Create a new review.
+      notes: |
+        # Normal response
+        - `publicId` is the public id of the certificate wich will later be used to fetch the db id
+        - A new review will be created if the request body is valid.  
+        - On success, returns **201 Created**.  
+        - If validation fails, returns **400 Bad Request**.
+
+    delete-review:
+      description: Delete a review by its ID.
+      notes: |
+        # Normal response
+        - If the review exists, it will be deleted and a **204 No Content** will be returned.  
+        - If the review does not exist, a **400 Bad Request** will be returned.
+        
+
+spring.security.oauth2.resourceserver.jwt.issuer-uri: "http://${app.auth-server}:9999"
+## used in service to retrive the id of the certificate with the publicId
+certificate:
+  host: localhost
+  port: 2400
+
+
+resilience4j.timelimiter:
+  instances:
+    getRealCertificateID:
+      timeoutDuration: 2s
+
+management.health.circuitbreakers.enabled: true
+
+resilience4j.circuitbreaker:
+  instances:
+    getRealCertificateID:
+      allowHealthIndicatorToFail: false
+      registerHealthIndicator: true
+      slidingWindowType: COUNT_BASED
+      slidingWindowSize: 5
+      failureRateThreshold: 50
+      waitDurationInOpenState: 10000
+      permittedNumberOfCallsInHalfOpenState: 3
+      automaticTransitionFromOpenToHalfOpenEnabled: true
+resilience4j.retry:
+  instances:
+    getRealCertificateID:
+        maxAttempts: 3
+        waitDuration: 1000
+        retryExceptions:
+          - java.lang.RuntimeException
+          - org.springframework.web.client.HttpServerErrorException
+---
+spring.config.activate.on-profile: docker
+
+server.port: 8080
+
+certificate:
+  host: certificate
+  port: 8080
+
+spring:
+  datasource:
+    username: revMyCertAdmin
+    password: revMyCertAdmin
+    url: jdbc:postgresql://postgres:5432/review_my_cert_db
