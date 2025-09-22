@@ -1,23 +1,19 @@
 package com.bozntouran.reviewservice.persistence;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Setter
 @Getter
 @Table(name = "review", indexes = { @Index(name = "review_unique_idx", unique = true, columnList = "id,certificateId,userId") })
@@ -47,7 +43,8 @@ public class Review {
     @UpdateTimestamp
     private LocalDateTime updateDate;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
+    @NotNull
     private String publicId;
 
 }

@@ -46,7 +46,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public Optional<CompanyDto> getCompanyById(String publicId) {
+    public Optional<CompanyDto> getCompanyByPublicId(String publicId) {
         log.info("getCompanyById {}", publicId);
         chekIfUUID(publicId);
         return Optional.of(CompanyMapper.MAPPER.fromCompany(
@@ -54,7 +54,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public CompanyDto saveNewCompany(CompanyDto companyDto) {
+    public CompanyDto saveCompany(CompanyDto companyDto) {
         Company company = companyRepository.save( CompanyMapper.MAPPER.toCompany(companyDto) );
         return CompanyMapper.MAPPER.fromCompany(company);
     }
@@ -90,6 +90,7 @@ public class CompanyServiceImpl implements CompanyService {
         return true;
     }
 
+    // returns the internal id from the publicid parameter
     @Override
     public Long retrieveInternalIdByPublicId(String publicId) {
 

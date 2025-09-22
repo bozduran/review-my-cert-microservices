@@ -11,6 +11,7 @@ import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static com.bozntouran.utils.Res4jHelperMethod.someThingBadHappened;
@@ -32,7 +32,7 @@ import static com.bozntouran.utils.Res4jHelperMethod.someThingBadHappened;
 public class CertificateController {
 
     private static final String CERTIFICATE_URL = "/certificate";
-    private static final String CERTIFICATE_ID_URL = "/certificate/{id}";
+    private static final String CERTIFICATE_ID_URL = "/certificate/{publicId}";
 
     private final CertificateService certificateService;
 
@@ -42,9 +42,9 @@ public class CertificateController {
     }
 
     @GetMapping("/internal"+CERTIFICATE_ID_URL)
-    public Long getCertificateIdByPublicId(@PathVariable String id){
-        log.info("getCertificateIdByPublicId with publicID: {}", id);
-        return this.certificateService.retrieveInternalIdByPublicId(id);
+    public Long getCertificateIdByPublicId(@PathVariable String publicId){
+        log.info("getCertificateIdByPublicId with publicID: {}", publicId);
+        return this.certificateService.retrieveInternalIdByPublicId(publicId);
     }
 
     @Operation(
@@ -66,7 +66,7 @@ public class CertificateController {
             @RequestParam(required = false) Long companyId
     ){
 
-        return this.certificateService.findAll(id,
+        return this.certificateService.getCertificates(id,
                 name,
                 startingRangePrice,
                 endRangePrice,
@@ -85,8 +85,8 @@ public class CertificateController {
             @ApiResponse(responseCode = "404", description = "${api.responseCodes.notFound.description}")
     })
     @GetMapping(value = CERTIFICATE_ID_URL,produces = "application/json")
-    public CertificateDto getCertificate(@PathVariable Long id){
-        return certificateService.getCertificate(id)
+    public CertificateDto getCertificate(@PathVariable String publicId){
+        return certificateService.retrieveCertificateByPublicId(publicId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
 
     }
@@ -105,20 +105,20 @@ public class CertificateController {
     @CircuitBreaker(name = "getRealCompanyID",
             fallbackMethod = "postCertificateFallBack")
     @PostMapping( CERTIFICATE_URL )
-    public CompletableFuture<ResponseEntity<CertificateDto>> postCertificate(@Validated @RequestBody CertificateDto certificateDto,
+    public CompletableFuture<ResponseEntity<CertificateDto>> postCertificate(@Valid @RequestBody CertificateDto certificateDto,
                                                                              @RequestParam(value = "delay", required = false,
                                                   defaultValue ="0") int delay,
                                                                              @RequestParam(value = "faultPercent", required = false,
                                                   defaultValue = "0") int faultPercent,
                                                                              Principal principal){
 
-        return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(()->{
             // TODO REMOVE ONLY USED FOR DEV Resilience4j also parameter
             if (delay > 0 || faultPercent > 0) {
                 someThingBadHappened(delay, faultPercent);
             }
             // when posting a new certificate the publicId is the public id of the COMPANY
-            CertificateDto newCertificate = certificateService.saveNewCertificate(certificateDto);
+            CertificateDto newCertificate = certificateService.saveCertificate(certificateDto);
             HttpHeaders httpHeaders = new HttpHeaders();
             // after when we send back the public id is the public id of CERTIFICATE
             httpHeaders.add("Location", CERTIFICATE_URL + "/"
@@ -154,10 +154,10 @@ public class CertificateController {
             @ApiResponse(responseCode = "404", description = "${api.responseCodes.notFound.description}"),
             @ApiResponse(responseCode = "422", description = "${api.responseCodes.unprocessableEntity.description}")
     })
-    @DeleteMapping("/admin" + CERTIFICATE_ID_URL)
-    public ResponseEntity deleteCertificate(@PathVariable Long id){
+    @DeleteMapping(CERTIFICATE_ID_URL)
+    public ResponseEntity deleteCertificate(@PathVariable String publicId){
 
-        if(!certificateService.deleteCertificateById(id)){
+        if(!certificateService.deleteCertificateByPublicId(publicId)){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource not found");
         }
 
@@ -174,14 +174,14 @@ public class CertificateController {
             @ApiResponse(responseCode = "400", description = "${api.responseCodes.badRequest.description}"),
             @ApiResponse(responseCode = "404", description = "${api.responseCodes.notFound.description}")
     })
-    @PatchMapping(CERTIFICATE_ID_URL)
-    public ResponseEntity<CertificateDto> updateCertificate(@RequestBody CertificateDto updateCertificateDto){
+    @PatchMapping(CERTIFICATE_URL)
+    public ResponseEntity<CertificateDto> updateCertificate(@RequestBody @Valid CertificateDto updateCertificateDto){
         try {
             certificateService.updateCertificate(updateCertificateDto);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource not found");
         }
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 

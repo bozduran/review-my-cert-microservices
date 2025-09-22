@@ -23,4 +23,8 @@ public interface CertificateRepository extends JpaRepository<Certificate,Long> {
     Page<Certificate> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     Optional<Certificate> findByPublicId(String publicId);
+
+    boolean existsByPublicId(String publicId);
+
+    boolean deleteByPublicId(String publicId);
 }

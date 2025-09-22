@@ -5,7 +5,6 @@ package com.bozntouran.companyservice.controller;
 import com.bozntouran.api.core.certificate.CertificateDto;
 import com.bozntouran.api.core.company.CompanyDto;
 import com.bozntouran.api.core.company.CompanyService;
-import com.bozntouran.utils.exception.BadRequestException;
 import com.bozntouran.utils.exception.ResourceNotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,16 +12,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.Optional;
 
 @RestController()
 @Log4j2
@@ -84,7 +78,7 @@ public class CompanyController {
     @GetMapping(COMPANY_ID_URL)
     public ResponseEntity<CompanyDto> getCompany(@PathVariable String publicId) {
 
-        CompanyDto companyDto = companyService.getCompanyById(publicId)
+        CompanyDto companyDto = companyService.getCompanyByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                 "Company with publicId " + publicId + " not found"));
 
@@ -103,7 +97,7 @@ public class CompanyController {
     @PostMapping(COMPANY_URL)
     public ResponseEntity<CompanyDto> postCompany(@RequestBody @Valid CompanyDto postCompanyDto){
 
-        CompanyDto companyDto = companyService.saveNewCompany(postCompanyDto);
+        CompanyDto companyDto = companyService.saveCompany(postCompanyDto);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Location", COMPANY_URL + "/"

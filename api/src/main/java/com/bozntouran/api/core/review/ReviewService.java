@@ -14,7 +14,7 @@ public interface ReviewService {
 
     Page<ReviewDto> retrieveAllReviews(String certificateId,String reviewId, String username, Integer pageNumber);
 
-    Optional<ReviewDto> retrieveReviewById(String id);
+    Optional<ReviewDto> retrieveReviewByPublicId(String id);
 
     Optional<ReviewDto> save(ReviewDto review);
 

@@ -32,7 +32,8 @@ public class Company {
     @Max(3000)
     private int yearOfFoundation;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
+    @NotNull
     private String publicId;
 
     @Version

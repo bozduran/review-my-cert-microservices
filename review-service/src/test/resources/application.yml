@@ -1,0 +1,59 @@
+spring:
+  datasource:
+    username: myappadmin
+    password: myappadmin
+    url: jdbc:postgresql://localhost:5432/myappdb
+    driver-class-name: org.postgresql.Driver
+
+  ssl.bundle.jks.gateway:
+    key:
+      alias: bozntouran
+    keystore:
+      type: PKCS12
+      location: classpath:keystore/bozntouran-keystore.p12
+      password: secret
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  cloud:
+    config:
+      enabled: false
+
+  main:
+    allow-bean-definition-overriding: true
+
+eureka:
+  client:
+    enabled: false
+
+server:
+  port: 0
+
+logging:
+  level:
+    com.bozntouran: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+api:
+
+  common:
+    version:
+    title:
+    description:
+    termsOfService:
+    license:
+    licenseUrl:
+    externalDocDesc:
+    externalDocUrl:
+    contact:
+      name:
+      url:
+      email:

@@ -22,4 +22,4 @@ logging:
     zalando:
       logbook: TRACE
   file:
-    eureka.log
+    logs/eureka.log

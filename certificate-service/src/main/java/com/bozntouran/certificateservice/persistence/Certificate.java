@@ -5,6 +5,7 @@ import com.bozntouran.api.core.certificate.CertificateField;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -32,6 +33,7 @@ public class Certificate {
     @Version
     private int version;
 
+    @Positive
     private double price;
 
     @Enumerated(EnumType.STRING)
@@ -42,7 +44,8 @@ public class Certificate {
     @UpdateTimestamp
     private Date updateDate;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
+    @NotNull
     private String publicId;
 
 }

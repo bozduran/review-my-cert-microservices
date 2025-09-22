@@ -10,9 +10,9 @@ import java.util.Optional;
 @SecurityRequirement(name = "security_auth")
 public interface CompanyService {
     Page<CompanyDto> getCompanies(String name, Integer pageNumber);
-    Optional<CompanyDto> getCompanyById(String publicId);
+    Optional<CompanyDto> getCompanyByPublicId(String publicId);
 
-    CompanyDto saveNewCompany(CompanyDto companyDto);
+    CompanyDto saveCompany(CompanyDto companyDto);
 
 
     boolean deleteCompanyById(String id);

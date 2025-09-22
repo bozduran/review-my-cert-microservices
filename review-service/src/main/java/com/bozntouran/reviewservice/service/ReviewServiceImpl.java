@@ -27,15 +27,14 @@ public class ReviewServiceImpl implements ReviewService {
 
 
     private final ReviewRepository reviewRepository;
-    private final String CERTIFICATE_URL;
+    private String CERTIFICATE_URL;
     private final RestTemplate restTemplate;
 
 
     @Autowired
     public ReviewServiceImpl(ReviewRepository reviewRepository,
-                             RestTemplate restTemplate,
-                             @Value("${certificate.host}") String certificateServiceHost,
-                             @Value("${certificate.port}") String certificateServicePort) {
+                             RestTemplate restTemplate
+) {
 
         this.restTemplate = restTemplate;
         this.CERTIFICATE_URL = "http://certificate/internal/certificate/";
@@ -43,41 +42,6 @@ public class ReviewServiceImpl implements ReviewService {
 
         this.reviewRepository = reviewRepository;
     }
-/*
-
-    public Review patchReviewByCertificateId(Certificate certificate, UserData userData, ReviewDto reviewDto){
-
-        Review review = reviewRepository.findByUserData(userData);
-
-        review.setComment(reviewDto.getComment());
-        review.setStars(reviewDto.getStars());
-        review.setUpdateDate(LocalDateTime.now());
-        return reviewRepository.save(review);
-    }
-
-    @Override
-    public Review saveNewReviewByCertificateId(Long id, String username, ReviewDto reviewDto) {
-        Certificate certificate = certificateRepository.findById(id).orElse(null);
-        UserData userData = userDataRepository.findUserByUsername(username);
-        if ( certificate == null ){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource not found");
-        }
-        if (reviewRepository.existsByCertificateAndUserData(certificate,userData)){
-            return patchReviewByCertificateId(certificate, userData, reviewDto);
-        }
-
-        Review review = new Review();
-
-        review.setStars(reviewDto.getStars());
-        review.setComment(reviewDto.getComment());
-        review.setCertificate(certificate);
-        review.setUserData(userData);
-        review.setUpdateDate(LocalDateTime.now());
-        review.setCreatedDate(LocalDateTime.now());
-
-        return reviewRepository.save(review);
-    }
-*/
 
     @Override
     public Page<ReviewDto> retrieveAllReviews(String certificateId,
@@ -103,8 +67,8 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public Optional<ReviewDto> retrieveReviewById(String id) {
-        return Optional.of(ReviewMapper.MAPPER.fromReview(reviewRepository.getByPublicIdIs(id)));
+    public Optional<ReviewDto> retrieveReviewByPublicId(String publicIdd) {
+        return Optional.of(ReviewMapper.MAPPER.fromReview(reviewRepository.getByPublicIdIs(publicIdd)));
     }
 
     @Override
@@ -115,6 +79,7 @@ public class ReviewServiceImpl implements ReviewService {
         reviewEntity.setPublicId(UUID.randomUUID().toString());
         // get the certificate id
         Optional<Long> resultID = getCertificateID(review);
+
         reviewEntity.setCertificateId(resultID.orElseThrow(
                 () -> new RuntimeException("No certificate id returned by th exchange on save")));
 
@@ -137,12 +102,20 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     private Optional<Long> getCertificateID(ReviewDto review) {
-        log.info("getCertificateID call to {}",CERTIFICATE_URL+review.getPublicId());
+        log.info("getCertificateID call to {}",CERTIFICATE_URL + review.getPublicId());
+
         return restTemplate.exchange(CERTIFICATE_URL + review.getPublicId(),
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<Optional<Long>>() {
                 }).getBody();
+
+
+    }
+
+    public void setCERTIFICATE_URL(String certificateUrl){
+        // TODO TESTING PURPOSE
+        this.CERTIFICATE_URL = certificateUrl;
     }
 
 

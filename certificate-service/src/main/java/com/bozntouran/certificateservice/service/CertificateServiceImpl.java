@@ -47,15 +47,15 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     @Override
-    public Optional<CertificateDto> getCertificate(long id) {
+    public Optional<CertificateDto> retrieveCertificateByPublicId(String publicId) {
         return Optional.of(
                 MAPPER.fromCertificate(
-                        certificateRepository.findById(id).orElseThrow()));
+                        certificateRepository.findByPublicId(publicId).orElseThrow()));
     }
 
     @Override
-    public CertificateDto saveNewCertificate(CertificateDto certificateDto) {
-        Long companyId = getCompanyId(certificateDto.getPublicId())
+    public CertificateDto saveCertificate(CertificateDto certificateDto) {
+        Long companyId = retrieveInternalCompanyId(certificateDto.getPublicId())
                 .orElseThrow(() -> new InternalError("No company found" ));
         certificateDto.setPublicId(UUID.randomUUID().toString());
         Certificate certificate = MAPPER.toCertificate(certificateDto);
@@ -64,7 +64,8 @@ public class CertificateServiceImpl implements CertificateService {
         return MAPPER.fromCertificate(certificateRepository.save(certificate));
     }
 
-    private Optional<Long> getCompanyId(String publicId){
+    // get the internal id of a company
+    private Optional<Long> retrieveInternalCompanyId(String publicId){
         log.info("getCompanyId call to {}",COMPANY_URL+publicId);
         return restTemplate.exchange(COMPANY_URL+publicId,
                 HttpMethod.GET,
@@ -73,25 +74,22 @@ public class CertificateServiceImpl implements CertificateService {
                 }).getBody();
     }
 
-
-    @Override
-    public boolean deleteCertificateById(Long id) {
-        if(certificateRepository.existsById(id) ){
-            certificateRepository.deleteById(id);
-            return true;
+    public boolean deleteCertificateByPublicId(String publicId) {
+        if(certificateRepository.existsByPublicId(publicId) ){
+            return certificateRepository.deleteByPublicId(publicId);
         }
 
         return false;
     }
 
     @Override
-    public Page<CertificateDto> findAll(Long id,
-                                 String name,
-                                 Double startingRangePrice,
-                                 Double endRangePrice,
-                                 CertificateField certificateField,
-                                 Integer pageNumber,
-                                 Long companyId) {
+    public Page<CertificateDto> getCertificates(Long id,
+                                                String name,
+                                                Double startingRangePrice,
+                                                Double endRangePrice,
+                                                CertificateField certificateField,
+                                                Integer pageNumber,
+                                                Long companyId) {
         PageRequest pageRequest = CustomPageRequests.pageRequestBuilder(pageNumber, 0,"updateDate");
         if(id != null){
             return certificateRepository.findAllById(id, pageRequest).map((MAPPER::fromCertificate));

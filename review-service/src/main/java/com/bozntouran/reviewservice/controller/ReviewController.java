@@ -11,23 +11,46 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
 import java.security.Principal;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static com.bozntouran.utils.Res4jHelperMethod.someThingBadHappened;
-
+/**
+ * Controller responsible for managing review-related operations.
+ * <p>
+ * Exposes REST endpoints to:
+ * <ul>
+ *   <li>Retrieve existing reviews</li>
+ *   <li>Create new reviews</li>
+ *   <li>Delete reviews</li>
+ * </ul>
+ * <p>
+ * Delegates the business logic to {@link ReviewService}.
+ *
+ * Typical usage:
+ * <pre>
+ *   GET    /reviews/{id}      // Retrieve a review by ID
+ *   POST   /reviews           // Create a new review
+ *   DELETE /reviews/{id}      // Delete a review
+ * </pre>
+ *
+ * @author YourName
+ * @since 1.0
+ */
 @RestController
 @Log4j2
 public class ReviewController {
@@ -54,7 +77,7 @@ public class ReviewController {
     @GetMapping(REVIEW_URL_ID)
     public ReviewDto getReviewById(@PathVariable String publicId) {
         log.info("getReviewById publicId -> :{}", publicId);
-        return reviewService.retrieveReviewById(publicId)
+        return reviewService.retrieveReviewByPublicId(publicId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
 
     }
@@ -68,6 +91,7 @@ public class ReviewController {
             @RequestParam(required = false) String reviewId,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) Integer pageNumber) {
+
         Page<ReviewDto> page = reviewService.retrieveAllReviews(certificateId, reviewId, username, pageNumber);
 
         return new ResponseEntity<>(page, HttpStatus.OK);
@@ -87,36 +111,36 @@ public class ReviewController {
     fallbackMethod = "postReviewFallBack")
     @PostMapping(REVIEW_URL)
     public CompletableFuture<ResponseEntity<ReviewDto>> postReview(@RequestBody @Valid ReviewDto review,
-                                                @RequestParam(value = "delay", required = false,
-                                                        defaultValue ="0") int delay,
-                                                @RequestParam(value = "faultPercent", required = false,
-                                                        defaultValue = "0") int faultPercent,
-                                                Principal principal
+                                                                   @RequestParam(value = "delay", required = false,
+                                                                           defaultValue ="0") int delay,
+                                                                   @RequestParam(value = "faultPercent", required = false,
+                                                                           defaultValue = "0") int faultPercent,
+                                                                   Principal principal
     ) {
         // TODO REMOVE ONLY USED FOR DEV Resilience4j
         return CompletableFuture.supplyAsync(() -> {
             if (delay > 0 || faultPercent > 0){
                 someThingBadHappened(delay,faultPercent);
             }
-            log.info("postReview");
-            log.info("User: {}", principal.getName());
-            review.setUserName(principal.getName());
+
             Optional<ReviewDto> newReviewDto = reviewService.save(review);
             newReviewDto.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cant create new review"));
-            return new ResponseEntity<>(HttpStatus.CREATED);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setLocation(URI.create("/review/"+newReviewDto.get().getPublicId()));
+            return new ResponseEntity<>(httpHeaders,HttpStatus.CREATED);
         });
     }
 
     public CompletableFuture<ResponseEntity<ReviewDto>>  postReviewFallBack(@RequestBody @Valid ReviewDto review,
-                                                @RequestParam(value = "delay", required = false,
-                                                        defaultValue ="0") int delay,
-                                                @RequestParam(value = "faultPercent", required = false,
-                                                        defaultValue = "0") int faultPercent,
-                                                Principal principal,
-                                                CallNotPermittedException exception
+                                                                            @RequestParam(value = "delay", required = false,
+                                                                                    defaultValue ="0") int delay,
+                                                                            @RequestParam(value = "faultPercent", required = false,
+                                                                                    defaultValue = "0") int faultPercent,
+                                                                            Principal principal,
+                                                                            CallNotPermittedException exception
     ){
         return CompletableFuture.supplyAsync(() -> {
-            log.info("postReviewFallBack {}", exception.getMessage());
+            log.info("postReviewFallBack ===> {}", exception.getMessage());
             return new ResponseEntity<>(HttpStatus.CREATED);
         });
     }

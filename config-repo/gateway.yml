@@ -107,7 +107,7 @@ logging:
       myapp:
         service: INFO
   file:
-    name: gateway.log
+    name: logs/gateway.log
 
 management.zipkin.tracing.endpoint: "http://zipkin:9411/api/v2/spans"
 management.tracing.sampling.probability: 1.0

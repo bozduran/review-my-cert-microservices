@@ -2,10 +2,7 @@ package com.bozntouran.companyservice.controller;
 
 import com.bozntouran.api.core.company.CompanyDto;
 import com.bozntouran.api.core.company.CompanyService;
-import com.bozntouran.companyservice.config.SecurityConfig;
-import com.bozntouran.companyservice.config.TestJwtConfig;
 import com.bozntouran.companyservice.config.TestSecurityConfig;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Assertions;
@@ -13,15 +10,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -33,7 +26,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -45,7 +37,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 
 @WebMvcTest(controllers = CompanyController.class,
@@ -75,14 +66,14 @@ class CompanyControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private CompanyDto sampleCompany;
+    private CompanyDto testCompany;
     private List<CompanyDto> companyDtos;
 
     @BeforeEach
     void setup() {
-        sampleCompany = new CompanyDto("company",1994,"asdasd");
-        sampleCompany.setPublicId(UUID.randomUUID().toString());
-        sampleCompany.setName("Test Company");
+        testCompany = new CompanyDto("company",1994,"asdasd");
+        testCompany.setPublicId(UUID.randomUUID().toString());
+        testCompany.setName("Test Company");
         companyDtos = List.of(
                 new CompanyDto("OpenAI", 2015, UUID.randomUUID().toString()),
                 new CompanyDto("Google", 1998, UUID.randomUUID().toString()),
@@ -96,12 +87,12 @@ class CompanyControllerTest {
         Mockito.when(companyService.retrieveInternalIdByPublicId(anyString())).thenReturn(1L);
 
         RequestBuilder requestBuilder =
-                MockMvcRequestBuilders.get("/internal/company/"+sampleCompany.getPublicId())
+                MockMvcRequestBuilders.get("/internal/company/"+testCompany.getPublicId())
                         .accept(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult = mockMvc.perform(requestBuilder).andReturn();
         Assertions.assertEquals(HttpStatus.OK.value() , mvcResult.getResponse().getStatus(),
-                "Fallse HTTP status");
+                "200 HTTP status expected");
     }
 
     @Test
@@ -126,10 +117,10 @@ class CompanyControllerTest {
 
     @Test
     void getCompany() throws Exception {
-        Mockito.when(companyService.getCompanyById(sampleCompany.getPublicId()) ).thenReturn(Optional.ofNullable(sampleCompany));
+        Mockito.when(companyService.getCompanyByPublicId(testCompany.getPublicId()) ).thenReturn(Optional.ofNullable(testCompany));
 
         RequestBuilder requestBuilder =
-                MockMvcRequestBuilders.get("/company/"+sampleCompany.getPublicId())
+                MockMvcRequestBuilders.get("/company/"+testCompany.getPublicId())
                         .accept(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult = mockMvc.perform(requestBuilder).andReturn();
@@ -137,10 +128,10 @@ class CompanyControllerTest {
         String jsonContent = mvcResult.getResponse().getContentAsString();
 
         Assertions.assertEquals(HttpStatus.OK.value(),mvcResult.getResponse().getStatus());
-        Assertions.assertEquals(sampleCompany.getName(),
+        Assertions.assertEquals(testCompany.getName(),
                 JsonPath.read(jsonContent,"$.name" )
         );
-        Assertions.assertEquals(sampleCompany.getPublicId(),
+        Assertions.assertEquals(testCompany.getPublicId(),
                 JsonPath.read(jsonContent,"$.publicId" )
         );
 
@@ -148,14 +139,14 @@ class CompanyControllerTest {
 
     @Test
     void postCompany() throws Exception {
-        Mockito.when(companyService.saveNewCompany(sampleCompany))
-                .thenReturn(sampleCompany);
+        Mockito.when(companyService.saveCompany(testCompany))
+                .thenReturn(testCompany);
 
         RequestBuilder requestBuilder =
                 MockMvcRequestBuilders.post("/company")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sampleCompany));
+                        .content(objectMapper.writeValueAsString(testCompany));
 
         MvcResult mvcResult = mockMvc.perform(requestBuilder).andReturn();
 
@@ -165,10 +156,10 @@ class CompanyControllerTest {
     @Test
     void deleteCompany() throws Exception {
 
-        Mockito.when(companyService.deleteCompanyById(sampleCompany.getPublicId()) ).thenReturn(true);
+        Mockito.when(companyService.deleteCompanyById(testCompany.getPublicId()) ).thenReturn(true);
 
         RequestBuilder requestBuilder =
-                MockMvcRequestBuilders.delete("/company/"+sampleCompany.getPublicId())
+                MockMvcRequestBuilders.delete("/company/"+testCompany.getPublicId())
                         .accept(MediaType.APPLICATION_JSON);
 
         MvcResult mvcResult = mockMvc.perform(requestBuilder).andReturn();
@@ -179,14 +170,14 @@ class CompanyControllerTest {
     @Test
     void updateCompany() throws Exception {
 
-        Mockito.when(companyService.updateCompany(sampleCompany))
+        Mockito.when(companyService.updateCompany(testCompany))
                 .thenReturn(true);
 
         RequestBuilder requestBuilder =
                 MockMvcRequestBuilders.patch("/company")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sampleCompany));
+                        .content(objectMapper.writeValueAsString(testCompany));
 
         MvcResult mvcResult = mockMvc.perform(requestBuilder).andReturn();
 

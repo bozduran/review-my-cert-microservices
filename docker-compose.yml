@@ -3,6 +3,8 @@ services:
   authorization-server:
     build: authorization-server
     mem_limit: 512m
+    volumes:
+      - ./logs:/usr/share/microservice/logs
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - CONFIG_SERVER_USR=${CONFIG_SERVER_USR}
@@ -26,6 +28,7 @@ services:
       - SPRING_SECURITY_USER_PASSWORD=${CONFIG_SERVER_PWD}
     volumes:
       - $PWD/config-repo:/config-repo
+      - ./logs:/usr/share/microservice/logs
     healthcheck:
       test: [ "CMD", "wget", "-O -", "-q", "http://localhost:8888/actuator/health" ]
       interval: 5s
@@ -54,6 +57,8 @@ services:
   certificate:
     build: certificate-service
     mem_limit: 512m
+    volumes:
+      - ./logs:/usr/share/microservice/logs
     hostname: certificate
     environment:
       - SPRING_PROFILES_ACTIVE=docker
@@ -73,6 +78,8 @@ services:
   review:
     build: review-service
     mem_limit: 512m
+    volumes:
+      - ./logs:/usr/share/microservice/logs
     hostname: review
     environment:
       - SPRING_PROFILES_ACTIVE=docker
@@ -92,6 +99,8 @@ services:
   company:
     build: company-service
     mem_limit: 512m
+    volumes:
+      - ./logs:/usr/share/microservice/logs
     hostname: company
     environment:
       - SPRING_PROFILES_ACTIVE=docker
@@ -107,6 +116,8 @@ services:
   gateway:
     build: gateway
     mem_limit: 512m
+    volumes:
+      - ./logs:/usr/share/microservice/logs
     hostname: gateway
     ports:
       - "8443:8443"
@@ -127,6 +138,8 @@ services:
     build: eureka-server
     mem_limit: 512m
     hostname: eureka
+    volumes:
+      - ./logs:/usr/share/microservice/logs
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - CONFIG_SERVER_USR=${CONFIG_SERVER_USR}
@@ -148,6 +161,8 @@ services:
       - STORAGE_TYPE=mem
     ports:
       - 9411:9411
+
+
 
 volumes:
   postgres_data:
