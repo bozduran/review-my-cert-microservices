@@ -7,12 +7,11 @@ import com.bozntouran.reviewservice.persistence.Review;
 import com.bozntouran.reviewservice.persistence.ReviewRepository;
 import com.bozntouran.reviewservice.service.ReviewServiceImpl;
 import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -29,7 +28,10 @@ import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.WebApplicationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 import org.wiremock.integrations.testcontainers.WireMockContainer;
 
 import java.util.List;
@@ -50,9 +52,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = {
         "spring.cloud.config.enabled=false"
 })
+@Testcontainers
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Import({SpringSecurityFilterChainForTest.class})
 class ReviewControllerTestIT {
-
 
     @Autowired
     ReviewController reviewController;
@@ -77,7 +81,16 @@ class ReviewControllerTestIT {
 
     MockMvc mockMvc;
 
+    @Container
+    @ServiceConnection
+    private static PostgreSQLContainer postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16.9"));
 
+    @Test
+    @Order(1)
+    void testContainerIsRunning() {
+        assertTrue(postgres.isCreated(), "PostgreSQLContainer container has not been created");
+        assertTrue(postgres.isRunning(), "PostgreSQLContainer container is not running");
+    }
 
     @BeforeEach
     void setUp() {
@@ -122,14 +135,19 @@ class ReviewControllerTestIT {
     void postReview() throws Exception {
         Review newReview = Review.builder()
                 .certificateId(1L)
-                .publicId(UUID.randomUUID().toString())
+                .publicId("16cb2bb8-f06b-4777-9fd4-db463b788550")
                 .comment("this is a comment")
                 .stars((short) 4)
                 .build();
 
-        mockMvc.perform(post("/review")
+
+        MvcResult mvcResult = mockMvc.perform(post("/review")
                 .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(newReview)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isCreated());
     }
 
@@ -148,7 +166,7 @@ class ReviewControllerTestIT {
 
         Review newReview = Review.builder()
                 .certificateId(1L)
-                .publicId(UUID.randomUUID().toString())
+                .publicId("16cb2bb8-f06b-4777-9fd4-db463b788550")
                 .comment("this is a comment")
                 .stars((short) 4)
                 .build();

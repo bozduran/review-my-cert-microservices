@@ -1,9 +1,5 @@
 spring:
-  datasource:
-    username: myappadmin
-    password: myappadmin
-    url: jdbc:postgresql://localhost:5432/myappdb
-    driver-class-name: org.postgresql.Driver
+
 
   ssl.bundle.jks.gateway:
     key:
@@ -13,14 +9,7 @@ spring:
       location: classpath:keystore/bozntouran-keystore.p12
       password: secret
 
-  jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    hibernate:
-      ddl-auto: validate
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+
 
   cloud:
     config:

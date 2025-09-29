@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "16cb2bb8-f06b-4777-9fd4-db463b788550"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": 1234567890123456789,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

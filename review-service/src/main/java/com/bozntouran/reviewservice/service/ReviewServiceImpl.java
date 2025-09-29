@@ -27,7 +27,7 @@ public class ReviewServiceImpl implements ReviewService {
 
 
     private final ReviewRepository reviewRepository;
-    private String CERTIFICATE_URL;
+    public String CERTIFICATE_URL;
     private final RestTemplate restTemplate;
 
 
@@ -37,8 +37,8 @@ public class ReviewServiceImpl implements ReviewService {
 ) {
 
         this.restTemplate = restTemplate;
-        this.CERTIFICATE_URL = "http://certificate/internal/certificate/";
-
+        //this.CERTIFICATE_URL = "http://certificate/internal/certificate/";
+        this.CERTIFICATE_URL = "http://localhost:8080/";
 
         this.reviewRepository = reviewRepository;
     }
@@ -79,7 +79,11 @@ public class ReviewServiceImpl implements ReviewService {
         reviewEntity.setPublicId(UUID.randomUUID().toString());
         // get the certificate id
         Optional<Long> resultID = getCertificateID(review);
-
+        if (resultID.isPresent()) {
+            System.out.println(resultID.get());
+        }else {
+            System.out.println("fails");
+        }
         reviewEntity.setCertificateId(resultID.orElseThrow(
                 () -> new RuntimeException("No certificate id returned by th exchange on save")));
 
@@ -102,6 +106,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     private Optional<Long> getCertificateID(ReviewDto review) {
+
         log.info("getCertificateID call to {}",CERTIFICATE_URL + review.getPublicId());
 
         return restTemplate.exchange(CERTIFICATE_URL + review.getPublicId(),
