@@ -108,6 +108,7 @@
             <artifactId>spring-retry</artifactId>
         </dependency>
 
+
         <!-- https://mvnrepository.com/artifact/io.micrometer/micrometer-tracing-bridge-otel
 export trace information to Zipkin-->
         <dependency>
@@ -127,6 +128,7 @@ export trace information to Zipkin-->
             <artifactId>datasource-micrometer-spring-boot</artifactId>
             <version>1.1.2</version>
         </dependency>
+
     </dependencies>
     <dependencyManagement>
         <dependencies>

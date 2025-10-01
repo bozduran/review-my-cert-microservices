@@ -8,8 +8,6 @@ logging:
   org:
     zalando:
       logbook: TRACE
-  file:
-    logs/authorization-server.log
 
 server.forward-headers-strategy: framework
 

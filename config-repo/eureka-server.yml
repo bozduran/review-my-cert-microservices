@@ -21,5 +21,3 @@ logging:
   org:
     zalando:
       logbook: TRACE
-  file:
-    logs/eureka.log
