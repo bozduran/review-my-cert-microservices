@@ -4,7 +4,6 @@ import com.bozntouran.reviewservice.config.TestSecurityConfig;
 import jakarta.persistence.EntityManager;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -14,10 +13,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import javax.swing.text.html.parser.Entity;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest(
         properties = {

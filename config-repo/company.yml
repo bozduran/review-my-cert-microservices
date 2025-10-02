@@ -14,8 +14,8 @@ server:
 
 logging:
   level:
-    com.netflix.discovery: INFO
-    org.springframework.cloud.netflix.eureka: INFO
+    com.netflix.discovery: error
+    org.springframework.cloud.netflix.eureka: error
     root: INFO
     org:
       zalando:

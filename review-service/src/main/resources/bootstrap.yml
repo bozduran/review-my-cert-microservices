@@ -23,3 +23,74 @@ logging:
 spring.config.activate.on-profile: docker
 
 spring.cloud.config.uri: http://config-server:8888
+
+---
+
+
+spring.config.activate.on-profile: test
+
+
+
+spring:
+  datasource:
+    username: revMyCertAdmin_test
+    password: revMyCertAdmin_test
+    url: jdbc:postgresql://localhost:5432/review_my_cert_db_test
+  application:
+    name: review-test
+  ssl.bundle.jks.gateway:
+    key:
+      alias: bozntouran
+    keystore:
+      type: PKCS12
+      location: classpath:keystore/bozntouran-keystore.p12
+      password: secret
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  cloud:
+    config:
+      enabled: false
+    discovery:
+      client:
+        simple: # Χρησιμοποιούμε το "simple" discovery client (στατικό)
+          instances: # Εδώ δηλώνουμε στατικές instances
+            certificate: # Το service ID που θα χρησιμοποιήσουμε για load balancing
+              - uri: http://localhost:8080   # Πρώτο instance
+  main:
+    allow-bean-definition-overriding: true
+eureka:
+  client:
+    enabled: false
+server:
+  port:
+
+logging:
+  level:
+    com.bozntouran: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org:
+      apache:
+        http:
+          wire: DEBUG     # Logs raw bytes sent over the wire
+          headers: DEBUG  # Logs HTTP headers
+
+api:
+
+  common:
+    version:
+    title:
+    description:
+    termsOfService:
+    license:
+    licenseUrl:
+    externalDocDesc:
+    externalDocUrl:
+    contact:
+      name:
+      url:
+      email:
+
+wiremock:
+  baseUrl: "http://localhost:8080/"

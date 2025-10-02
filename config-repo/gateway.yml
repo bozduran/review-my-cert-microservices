@@ -93,10 +93,10 @@ server:
 
 logging:
   level:
-    org.springframework.http.server.reactive: DEBUG
-    org.springframework.web.reactive: DEBUG
-    reactor.netty.http.client: DEBUG
-    org.springframework.cloud.gateway: trace
+    ##org.springframework.http.server.reactive: error
+    ##org.springframework.web.reactive: DEBUG
+    reactor.netty.http.client: error
+    org.springframework.cloud.gateway: error
     root: INFO
     org:
       zalando:

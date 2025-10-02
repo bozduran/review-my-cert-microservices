@@ -42,10 +42,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ActiveProfiles("test")
 @SpringBootTest
+@Testcontainers
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ImportAutoConfiguration(exclude = { SpringSecurityFilterChainForTest.class})
 class ReviewControllerTestIT {
+
+
+
+    @Autowired
+    ReviewController reviewController;
 
     @Autowired
     ReviewRepository reviewRepository;
@@ -60,6 +66,62 @@ class ReviewControllerTestIT {
     WebApplicationContext webApplicationContext;
 
     MockMvc mockMvc;
+
+    @Container
+    @ServiceConnection
+    private static PostgreSQLContainer postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16.9"))
+            .withDatabaseName("myappdb")
+            .withUsername("myappadmin")
+            .withPassword("myappadmin");
+
+    @Container
+    private static WireMockContainer wireMockContainer =
+            new WireMockContainer(            DockerImageName.parse("wiremock/wiremock:2.35.0") )
+                    .withExposedPorts(8080);
+            //.withMapping("certificate",  "mappings/review-get-certificate-id.json");
+
+    @BeforeAll
+    void setup() {
+        String baseUrl = "http://" + wireMockContainer.getHost() +
+                ":" + wireMockContainer.getMappedPort(8080);
+        System.out.println("baseUrl: " + baseUrl);
+        wireMockContainer.withMappingFromJSON("{\n" +
+                "  \"request\": {\n" +
+                "    \"method\": \"GET\",\n" +
+                "    \"url\": \"/internal/certificate/16cb2bb8-f06b-4777-9fd4-db463b788550\"\n" +
+                "  },\n" +
+                "  \"response\": {\n" +
+                "    \"status\": 200,\n" +
+                "    \"headers\": {\n" +
+                "      \"Cache-Control\": \"no-cache, no-store, max-age=0, must-revalidate\",\n" +
+                "      \"Connection\": \"keep-alive\",\n" +
+                "      \"Content-Type\": \"application/json\",\n" +
+                "      \"Expires\": \"0\",\n" +
+                "      \"Keep-Alive\": \"timeout=60\",\n" +
+                "      \"Pragma\": \"no-cache\",\n" +
+                "      \"Transfer-Encoding\": \"chunked\",\n" +
+                "      \"X-Content-Type-Options\": \"nosniff\",\n" +
+                "      \"X-Frame-Options\": \"DENY\",\n" +
+                "      \"X-XSS-Protection\": \"0\"\n" +
+                "    },\n" +
+                "    \"jsonBody\": 1123213\n" +
+                "  }\n" +
+                "}\n");
+        wireMockContainer.start();
+    }
+
+    @AfterAll
+    void tearDown() {
+        wireMockContainer.stop();
+    }
+    @Test
+    @Order(1)
+    void testContainerIsRunning() {
+        assertTrue(postgres.isCreated(), "PostgreSQLContainer container has not been created");
+        assertTrue(postgres.isRunning(), "PostgreSQLContainer container is not running");
+        assertTrue(wireMockContainer.isCreated(), "WireMockContainer container has not been created");
+        assertTrue(wireMockContainer.isRunning(), "WireMockContainer container is not running");
+    }
 
     public static final SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor jwtRequestPostProcessorUser =
             jwt().jwt(jwt -> {
@@ -105,7 +167,7 @@ class ReviewControllerTestIT {
     @Test
     void getAllReviews() throws Exception {
         List<Review> reviews = reviewRepository.findAll();
-        System.out.println("review.size:"+reviews.size());
+
         var result = mockMvc.perform(get("/review" )
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)

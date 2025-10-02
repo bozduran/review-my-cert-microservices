@@ -1,5 +1,4 @@
-# Sample compose file
-version: "3"
+
 services:
   wiremock:
     image: "wiremock/wiremock:latest"
@@ -11,3 +10,24 @@ services:
       - ./__files:/home/wiremock/__files
       - ./mappings:/home/wiremock/mappings
     entrypoint: ["/docker-entrypoint.sh", "--global-response-templating", "--disable-gzip", "--verbose"]
+
+  postgres:
+    image: postgres:16.9
+    container_name: review_my_cert_postgres_db_test
+    environment:
+      - POSTGRES_DB=review_my_cert_db_test
+      - POSTGRES_USER=revMyCertAdmin_test
+      - POSTGRES_PASSWORD=revMyCertAdmin_test
+    hostname: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_test:/var/lib/postgresql/data_test
+      - ./init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U revMyCertAdmin_test -d review_my_cert_db_test" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+volumes:
+  postgres_data_test:

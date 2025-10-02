@@ -37,9 +37,7 @@ public class ReviewServiceImpl implements ReviewService {
 ) {
 
         this.restTemplate = restTemplate;
-        //this.CERTIFICATE_URL = "http://certificate/internal/certificate/";
-        this.CERTIFICATE_URL = "http://localhost:8080/";
-
+        this.CERTIFICATE_URL = "http://certificate/internal/certificate/";
         this.reviewRepository = reviewRepository;
     }
 
@@ -109,11 +107,17 @@ public class ReviewServiceImpl implements ReviewService {
 
         log.info("getCertificateID call to {}",CERTIFICATE_URL + review.getPublicId());
 
-        return restTemplate.exchange(CERTIFICATE_URL + review.getPublicId(),
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<Optional<Long>>() {
-                }).getBody();
+        Optional<Long> id = Optional.ofNullable(
+                restTemplate.exchange(
+                        CERTIFICATE_URL + review.getPublicId(),
+                        HttpMethod.GET,
+                        null,
+                        new ParameterizedTypeReference<Long>() {}
+                ).getBody()
+        );
+
+        return id;
+
 
 
     }
